@@ -2,7 +2,7 @@ const appDynamics = require("appdynamics");
 require('dotenv').config()
 const pool = require('../database/connection');
 exports.as400Production = async (req, resp) => {
-
+    let appDynamicsTransactions = [];
     let time = new Date().toLocaleDateString();
     const data = await pool.query('SELECT  * FROM  AS400');
 
@@ -33,14 +33,18 @@ let URL = req.url+'/'+data[i].display_name;
             'data': data[i]
 
         }
-            console.log(respData);
-            resp.send(respData);
+        appDynamicsTransactions.push(respData);
         } catch (error) {
             resp.send({
                 'message': 'Lo sentimos algo salio mal',
                 'error': error
 
             })
+
+        }
+
+        if(i === data.length -1){
+            resp.send(appDynamicsTransactions);
 
         }
     }
