@@ -1,25 +1,61 @@
 const appDynamics = require("appdynamics");
-require('dotenv').config()  
+require('dotenv').config()
 const pool = require('../database/connection');
-exports.as400Production = async (req, resp)=>{
-    const data = await pool.query('SELECT  * FROM  AS400');
-    let transaction_id = nodeAppStartTransaction(req.params.display_name,data,req.url);
-        let time = new Date();
- 
+exports.as400Production = async (req, resp) => {
 
-console.log("SELECT * FROM AS400 WHERE DISPLAY_NAME ="+req.params.display_name);
-resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'transaction.id':transaction_id,'params.display_name':req.params.display_name,'api.url':req.url,'data':data});
- 
+    let time = new Date().toLocaleDateString();
+    const data = await pool.query('SELECT  * FROM  AS400');
+
+    if(data.length == 0){
+
+        resp.send({
+            'message': 'No hay datos que mostrar'
+        })
+        return;
+    };
+
+
+    for (let i = 0; i < data.length; i++) {
+let URL = req.url+'/'+data[i].display_name;
+        try {
+
+         let transaction_id = nodeAppStartTransaction(
+            req.params.display_name,
+            data[i],
+            URL);
+
+        let respData = {
+            'date': time,
+            'time': time,
+            'transaction.id': transaction_id,
+            'display_name': data[i].display_name,
+            'api.url': URL,
+            'data': data[i]
+
+        }
+            console.log(respData);
+            resp.send(respData);
+        } catch (error) {
+            resp.send({
+                'message': 'Lo sentimos algo salio mal',
+                'error': error
+
+            })
+
+        }
+    }
+
+
 };
 
 
-function nodeAppStartTransaction(param,data,api){
+function nodeAppStartTransaction(param, data, api) {
     var transactionInfo = api;
     var transaction_id = null;
     appDynamics.profile({
         controllerHostName: 'datasysgroup-nfr.saas.appdynamics.com',
         controllerPort: 443,
-        
+
         // If SSL, be sure to enable the next line
         controllerSslEnabled: true,
         accountName: 'datasysgroup-nfr',
@@ -27,18 +63,18 @@ function nodeAppStartTransaction(param,data,api){
         applicationName: 'AS400_PRODUCTION',
         tierName: 'AS400_PRODUCTION',
         nodeName: 'process' // The controller will automatically append the node name with a unique number
-       });
+    });
     var transaction = appDynamics.startTransaction(transactionInfo);
-    transaction.addAnalyticsData(param,JSON.stringify(data));
-    transaction.addSnapshotData(param,JSON.stringify(data));
-    console.log('transaction',transaction)
-    transaction_id  = transaction.transaction.id;
+    transaction.addAnalyticsData(param, JSON.stringify(data));
+    transaction.addSnapshotData(param, JSON.stringify(data));
+    console.log('transaction', transaction)
+    transaction_id = transaction.transaction.id;
     transaction.end();
     return transaction_id;
 }
 
 
-exports.as400_404 = (req, resp)=>{
-    
-    resp.send('Not Found, the correct api should be '+`${process.env.prdMode === "true" ?  process.env.prdtURL : process.env.testURL}`);
+exports.as400_404 = (req, resp) => {
+
+    resp.send('Not Found, the correct api should be ' + `${process.env.prdMode === "true" ? process.env.prdtURL : process.env.testURL}`);
 };
