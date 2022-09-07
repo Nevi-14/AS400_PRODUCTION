@@ -3,7 +3,7 @@
 module.exports = {
 
     database: {
-        host: '127.0.0.1', // host de donde esta la base de datos
+        host: 'localhost', // host de donde esta la base de datos
         user: 'ndoutils',
         password: 'T4z4dec4fe',
         database: 'nagios'

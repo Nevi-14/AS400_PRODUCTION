@@ -2,12 +2,13 @@ const appDynamics = require("appdynamics");
 require('dotenv').config()  
 const pool = require('../database/connection');
 exports.as400Production = async (req, resp)=>{
-    const data = await pool.query('SELECT  * FROM  AS400 ');
-
-    let transaction_id = nodeAppStartTransaction(req.params.id,data[0],req.url);
+    const data = await pool.query('SELECT  * FROM  AS400');
+    let transaction_id = nodeAppStartTransaction(req.params.display_name,data,req.url);
         let time = new Date();
  
-resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'transaction.id':transaction_id,'params.id':req.params.id,'api.url':req.url});
+
+console.log("SELECT * FROM AS400 WHERE DISPLAY_NAME ="+req.params.display_name);
+resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'transaction.id':transaction_id,'params.display_name':req.params.display_name,'api.url':req.url,'data':data});
  
 };
 
