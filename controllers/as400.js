@@ -33,6 +33,12 @@ let URL = req.url+'/'+data[i].display_name;
             'data': data[i]
 
         }
+        resp.setHeader(
+            'AS400', // Header name
+            respData
+            
+            );
+            
         appDynamicsTransactions.push(respData);
         } catch (error) {
             resp.send({
