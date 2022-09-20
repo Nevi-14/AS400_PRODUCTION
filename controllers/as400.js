@@ -2,26 +2,33 @@ const appDynamics = require("appdynamics");
 require('dotenv').config()
 const pool = require('../database/connection');
 exports.as400Production = async (req, resp) => {
-  const data = await pool.query('SELECT  * FROM  AS400 where display_name= '+ req.params.display_name);
 
+let time = new Date();
+let query = 'SELECT  * FROM  AS400 where display_name='+'"'+req.params.display_name+'"';
 
+  try {
+    const data = await pool.query(query);
+    let transaction_id = nodeAppStartTransaction(req.params.display_name,data[0],req.url);
+      
 
-resp.send({'data':'SELECT  * FROM  AS400 where display_name='+req.params.display_name})
+    resp.setHeader(
+        'AS400', // Header name
+        {'date':time.toLocaleDateString(),
+        'time':time.toLocaleTimeString(),
+        'transaction.id':transaction_id,
+        'params.display_name':req.params.display_name,
+        'api.url':req.url} 
+        );
+
+        resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'params.display_name':req.params.display_name,'api.url':req.url});
+  } catch (error) {
+    resp.send({'error':error})
+    
+  }
 
 return;
 
-    let transaction_id = nodeAppStartTransaction(req.params.display_name,data[0],req.url);
-        let time = new Date();
-resp.setHeader(
- 'AS400', // Header name
- {'date':time.toLocaleDateString(),
- 'time':time.toLocaleTimeString(),
- 'transaction.id':transaction_id,
- 'params.display_name':req.params.display_name,
- 'api.url':req.url}
- 
- );
-resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'params.display_name':req.params.display_name,'api.url':req.url});
+
 
 
 
