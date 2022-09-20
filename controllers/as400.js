@@ -2,58 +2,27 @@ const appDynamics = require("appdynamics");
 require('dotenv').config()
 const pool = require('../database/connection');
 exports.as400Production = async (req, resp) => {
-    let appDynamicsTransactions = [];
-    let time = new Date().toLocaleDateString();
-    const data = await pool.query('SELECT  * FROM  AS400');
-
-    if(data.length == 0){
-
-        resp.send({
-            'message': 'No hay datos que mostrar'
-        })
-        return;
-    };
+  const data = await pool.query('SELECT  * FROM  AS400 where display_name= '+ req.params.display_name);
 
 
-    for (let i = 0; i < data.length; i++) {
-let URL = req.url+'/'+data[i].display_name;
-        try {
 
-         let transaction_id = nodeAppStartTransaction(
-            req.params.display_name,
-            data[i],
-            URL);
+resp.send({'data':'SELECT  * FROM  AS400 where display_name='+req.params.display_name})
 
-        let respData = {
-            'date': time,
-            'time': time,
-            'transaction.id': transaction_id,
-            'display_name': data[i].display_name,
-            'api.url': URL,
-            'data': data[i]
+return;
 
-        }
-        resp.setHeader(
-            'AS400', // Header name
-            respData
-            
-            );
-            
-        appDynamicsTransactions.push(respData);
-        } catch (error) {
-            resp.send({
-                'message': 'Lo sentimos algo salio mal',
-                'error': error
+    let transaction_id = nodeAppStartTransaction(req.params.display_name,data[0],req.url);
+        let time = new Date();
+resp.setHeader(
+ 'AS400', // Header name
+ {'date':time.toLocaleDateString(),
+ 'time':time.toLocaleTimeString(),
+ 'transaction.id':transaction_id,
+ 'params.display_name':req.params.display_name,
+ 'api.url':req.url}
+ 
+ );
+resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'params.display_name':req.params.display_name,'api.url':req.url});
 
-            })
-
-        }
-
-        if(i === data.length -1){
-            resp.send(appDynamicsTransactions);
-
-        }
-    }
 
 
 };
