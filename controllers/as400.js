@@ -13,7 +13,7 @@ let query = 'SELECT  * FROM  AS400';
 
        nodeAppStartTransaction(
 
-        req.params.display_name,
+        data[i].display_name,
         data[i],
         req.url
         
