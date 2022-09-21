@@ -4,32 +4,34 @@ const pool = require('../database/connection');
 exports.as400Production = async (req, resp) => {
 
 let time = new Date();
-let query = 'SELECT  * FROM  AS400 where display_name='+'"'+req.params.display_name+'"';
+let query = 'SELECT  * FROM  AS400';
 
   try {
     const data = await pool.query(query);
-    let transaction_id = nodeAppStartTransaction(req.params.display_name,data[0],req.url);
-      
 
-    resp.setHeader(
-        'AS400', // Header name
-        {'date':time.toLocaleDateString(),
-        'time':time.toLocaleTimeString(),
-        'transaction.id':transaction_id,
-        'params.display_name':req.params.display_name,
-        'api.url':req.url} 
+    for(let i =0; i < data.length; i++){
+
+       nodeAppStartTransaction(
+
+        req.params.display_name,
+        data[i],
+        req.url
+        
         );
-
+     
+      if(i == data.length -1){
         resp.send({'date':time.toLocaleDateString(),'time':time.toLocaleTimeString(),'params.display_name':req.params.display_name,'api.url':req.url});
+
+      }
+
+    };
+    
   } catch (error) {
     resp.send({'error':error})
     
   }
 
 return;
-
-
-
 
 
 };
